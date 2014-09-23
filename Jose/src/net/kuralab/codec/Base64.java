@@ -27,6 +27,7 @@ public class Base64 {
 			int s = (int)b;
 			if (s < 0) s += 256;
 			String hex = Integer.toHexString(s);
+			if (s < 16) hex = "0" + hex;
 			String bitPart1 = Integer.toBinaryString(Integer.parseInt(hex.substring(0, 1), 16));
 			String bitPart2 = Integer.toBinaryString(Integer.parseInt(hex.substring(1, 2), 16));
 			int bitPart1Padding = 4 - bitPart1.length();
@@ -87,6 +88,20 @@ public class Base64 {
 		}
 		
 		return result;
+	}
+	
+	public static String encodeUrlSafe(byte[] binary) {
+		String encodedData = Base64.encode(binary);
+		encodedData = encodedData.replaceAll("=", "");
+		encodedData = encodedData.replaceAll("\\+", "-");
+		encodedData = encodedData.replaceAll("/", "_");
+		return encodedData;
+	}
+	
+	public static byte[] decodeUrlSafe(String data) {
+		data = data.replaceAll("\\-", "+");
+		data = data.replaceAll("_", "/");
+		return Base64.decode(data);
 	}
 
 }
