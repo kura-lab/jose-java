@@ -16,3 +16,5 @@ Json Web Token (JWT) Library for Java
 #### Supported Algorithm
 
 * HMAC-SHA256
+* HMAC-SHA384
+* HMAC-SHA512
