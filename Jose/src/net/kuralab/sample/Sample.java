@@ -20,13 +20,13 @@ public class Sample {
 				.setExpiration(new Date().getTime() / 1000 + 3600)
 				.setNonce("abcdefg");
 		// Create JWT String
-		String result = jwt.encode("secret", JsonWebToken.HS256);
+		String result = jwt.encode("secret", JsonWebToken.HS512);
 		System.out.println("JSON Web Token: " + result);
 
 		// Create JWT Object
 		JsonWebToken jwt2 = new JsonWebToken(result);
 
-		if (jwt2.verify("secret", "example.com", "client_id3", "abcdefg")) {
+		if (jwt2.verify("secret", "example.com", "client_id", "abcdefg")) {
 			System.out.println("the token is valid.");
 			// Decode JWT String
 			jwt2.decode();

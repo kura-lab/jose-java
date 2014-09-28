@@ -26,7 +26,9 @@ import net.kuralab.codec.Base64;
  */
 public class JsonWebToken {
 
-	public static String HS256 = "hmacSHA256";
+	public static String HS256 = "HmacSHA256";
+	public static String HS384 = "HmacSHA384";
+	public static String HS512 = "HmacSHA512";
 
 	private String issuer;
 	private String[] audience;
@@ -75,9 +77,9 @@ public class JsonWebToken {
 	}
 
 	public String encode(String secret, String algorithm) {
-
+		String shortAlgorithm = this.convertShortAlgorithm(algorithm);
 		JsonObject header = Json.createObjectBuilder()
-				.add("alg", "HS256")
+				.add("alg", shortAlgorithm)
 				.add("typ", "JWT")
 				.build();
 
@@ -147,12 +149,6 @@ public class JsonWebToken {
 			return false;
 		}
 
-		if (!"HS256".equals(this.headerJsonObject.getString("alg"))) {
-			this.verifyError = "unsupported_algorithm";
-			this.verifyErrorDetail = "\"" + this.headerJsonObject.getString("alg") + "\" is unsupported algorithm.";
-			return false;
-		}
-
 		if (!issuer.equals(this.payloadJsonObject.getString("iss"))) {
 			this.verifyError = "invalid_issuer";
 			this.verifyErrorDetail = "\"" + this.payloadJsonObject.getString("iss") + "\" is invalid issuer. expected issuer is \"" + issuer + "\".";
@@ -162,7 +158,8 @@ public class JsonWebToken {
 		JsonArray audiencejsonArray = this.payloadJsonObject.getJsonArray("aud");
 		boolean existAudience = false;
 		for (Iterator<JsonValue> i = audiencejsonArray.iterator(); i.hasNext();) {
-			if (audience.equals(i.next())) {
+			String audienceJsonString = "\"" + audience + "\"";
+			if (audienceJsonString.equals(i.next().toString())) {
 				existAudience = true;
 				break;
 			}
@@ -192,8 +189,13 @@ public class JsonWebToken {
 			return false;
 		}
 
-		String sig = this.generateSignature(
-				this.header + this.payload, secret, JsonWebToken.HS256);
+		String algorithm = this.convertLongAlgorithm(this.headerJsonObject.getString("alg"));
+		if (algorithm == null) {
+			this.verifyError = "unsupported_algorithm";
+			this.verifyErrorDetail = "\"" + this.headerJsonObject.getString("alg") + "\" is unsupported algorithm.";
+			return false;
+		}
+		String sig = this.generateSignature(this.header + this.payload, secret, algorithm);
 		if (this.signature.equals(sig)) {
 			this.verifyError = "invalid_signature";
 			this.verifyErrorDetail = "\"" + this.signature + "\" is invalid signature. expected signature is \"" + sig + "\".";
@@ -226,5 +228,43 @@ public class JsonWebToken {
 		}
 
 		return Base64.encode(result);
+	}
+
+	private String convertShortAlgorithm(String algorithm) {
+		String result = null;
+		switch (algorithm) {
+		case "HmacSHA256":
+			result = "HS256";
+			break;
+		case "HmacSHA384":
+			result = "HS384";
+			break;
+		case "HmacSHA512":
+			result = "HS512";
+			break;
+		default:
+			break;
+		}
+
+		return result;
+	}
+
+	private String convertLongAlgorithm(String algorithm) {
+		String result = null;
+		switch (algorithm) {
+		case "HS256":
+			result = JsonWebToken.HS256;
+			break;
+		case "HS384":
+			result = JsonWebToken.HS384;
+			break;
+		case "HS512":
+			result = JsonWebToken.HS512;
+			break;
+		default:
+			break;
+		}
+
+		return result;
 	}
 }
